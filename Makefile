@@ -36,8 +36,8 @@ PROTOS_PATH = protos
 
 vpath %.proto $(PROTOS_PATH)
 
-all: system-check user_client
-user_client : user.pb.o user.grpc.pb.o user_client.o
+all: system-check kv_client
+kv_client : kvStore.pb.o kvStore.grpc.pb.o kv_client.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
 .PRECIOUS: %.grpc.pb.cc
@@ -49,7 +49,7 @@ user_client : user.pb.o user.grpc.pb.o user_client.o
 	$(PROTOC) -I $(PROTOS_PATH) --cpp_out=. $<
 
 clean:
-	rm -f *.o *.pb.cc *.pb.h user_client 
+	rm -f *.o *.pb.cc *.pb.h kv_client 
 
 
 # The following is to test your system and ensure a smoother experience.
