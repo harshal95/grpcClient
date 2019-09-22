@@ -87,10 +87,10 @@ int main(int argc, char** argv) {
   // (use of InsecureChannelCredentials()).
   std::cout << "Inside main" << std::endl;
   KVStoreClient kVStoreClient(grpc::CreateChannel(
-      "localhost:9090", grpc::InsecureChannelCredentials()));
+      "localhost:9091", grpc::InsecureChannelCredentials()));
   std::string key("hello");
   std::string value("tea");
-  std::string oldvalue("");
+  std::string oldvalue("old");
   int reply = kVStoreClient.get(key, value);
   std::cout << "Response received: " << reply << std::endl;
 

@@ -1,7 +1,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
-
+#include <cstdlib>
 #include <grpcpp/grpcpp.h>
 #ifdef BAZEL_BUILD
 #include "protos/kvStore.grpc.pb.h"
@@ -9,15 +9,19 @@
 #include "kvStore.grpc.pb.h"
 #endif
 
+//#define MAX_VALUE 100
+
 using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
 
 class KVStoreClient {
  public:
+
+  
   // Assembles the client's payload, sends it and presents the response back
   // from the server.
-  int get(const std::string& key, const std::string& value) {
+  int get(std::string& key, std::string& value) {
     // Data we are sending to the server.
     GetRequest get_request;
     get_request.set_requestkey(key);
@@ -31,6 +35,7 @@ class KVStoreClient {
 
     // The actual RPC.
     Status status = stub_->get(&context, get_request, &get_response);
+    value = get_response.responsevalue();
     // Act upon its status.
     if (status.ok()) {
       std::cout << "Get response value: " << get_response.responsevalue() << std::endl;
@@ -43,7 +48,7 @@ class KVStoreClient {
     }
   }
 
-  int put(const std::string& key, const std::string& value, const std::string& oldvalue) {
+  int put(std::string& key, std::string& value, std::string& oldvalue) {
     PutRequest put_request;
     put_request.set_requestkey(key);
     put_request.set_requestnewvalue(value);
@@ -54,6 +59,8 @@ class KVStoreClient {
     ClientContext context;
 
     Status status = stub_->put(&context, put_request, &put_response);
+    oldvalue = put_response.responseoldvalue();
+    value = put_response.responsenewvalue();
 
     if(status.ok()) {
       std::cout << "put value : " << put_response.responsenewvalue() << std::endl;
@@ -65,29 +72,53 @@ class KVStoreClient {
         //return "RPC failed";
     }
 }
+// static KVStoreClient** CreatedInstance() {
+//   return client_instance;
+// }
 
-static KVStoreClient* Instance() {
-  if(!client_instance) {
-    client_instance = new KVStoreClient(grpc::CreateChannel("localhost:9090", grpc::InsecureChannelCredentials()));
+static KVStoreClient** Instance(char** server_list) {
+  if(server_list == NULL)
+    return client_instance;
+  int n = sizeof(server_list)/sizeof(server_list[0]);
+  client_instance = (KVStoreClient**)malloc(n * sizeof(KVStoreClient*));
+  for(int i = 0; i < sizeof(server_list)/sizeof(server_list[0]); i++) {
+    //client_instance[i] = (KVStoreClient* )malloc(sizeof(KVStoreClient));
+    client_instance[i] = new KVStoreClient(grpc::CreateChannel(server_list[i], grpc::InsecureChannelCredentials()));
   }
+  //client_instance = new KVStoreClient(grpc::CreateChannel("localhost:9090", grpc::InsecureChannelCredentials()));
+
   return client_instance;
 }
 
  private:
   std::unique_ptr<kvStore::Stub> stub_;
+  
+  static KVStoreClient** client_instance;
   KVStoreClient(std::shared_ptr<Channel> channel)
       : stub_(kvStore::NewStub(channel)) {}
-  static KVStoreClient* client_instance;
 
 };
 
-KVStoreClient* KVStoreClient::client_instance = NULL;
+KVStoreClient** KVStoreClient::client_instance = NULL;
 
 int kv739_get(char* key, char* value) {
+
   std::string key_string(key);
   std::string value_string(value);
   //KVStoreClient kVStoreClient(grpc::CreateChannel("localhost:9090", grpc::InsecureChannelCredentials()));
-  int response_code = KVStoreClient::Instance() -> get(key_string, value_string);
+  KVStoreClient** connection_list = KVStoreClient::Instance(NULL);
+  KVStoreClient* connect_obj = NULL;
+  for(int i = 0; i < sizeof(connection_list)/sizeof(connection_list[0]); i++) {
+    if(connect_obj == NULL) {
+      connect_obj = connection_list[i];
+    }
+  }
+  if(connect_obj == NULL) {
+    return -1;
+  }
+
+  int response_code = connect_obj -> get(key_string, value_string);
+  //int response_code = kVStoreClient.get(key_string, value_string);
   std::cout << "Response code from Get for key: " << response_code << std::endl;
   std::cout << "Printing response from Get for key: " << key_string << " and value: " << value_string << std::endl;
   return response_code;
@@ -98,10 +129,34 @@ int kv739_put(char* key, char* value, char* old_value) {
   std::string value_string(value);
   std::string old_value_string(old_value);
   //KVStoreClient kVStoreClient(grpc::CreateChannel("localhost:9090", grpc::InsecureChannelCredentials()));
-  int response_code = KVStoreClient::Instance() -> put(key_string, value_string, old_value_string);
+
+  KVStoreClient** connection_list = KVStoreClient::Instance(NULL);
+  KVStoreClient* connect_obj = NULL;
+  for(int i = 0; i < sizeof(connection_list)/sizeof(connection_list[0]); i++) {
+    if(connect_obj == NULL) {
+      connect_obj = connection_list[i];
+    }
+  }
+  
+  if(connect_obj == NULL) {
+    return -1;
+  }
+
+  int response_code = connect_obj -> put(key_string, value_string, old_value_string);
+  //int response_code = kVStoreClient.put(key_string, value_string, old_value_string);
   std::cout << "Response code from Put for key: " << response_code << std::endl;
   std::cout << "Printing response from Put for key: " << key_string << " and value: " << value_string << " and old_value: " << old_value_string << std::endl;  
   return response_code; 
+}
+
+int kv739_init(char** server_list) {
+  KVStoreClient** connection_list = KVStoreClient::Instance(server_list);
+  for(int i = 0; i < sizeof(server_list)/sizeof(server_list[0]); i++) {
+    if(connection_list[i] != NULL) {
+      return 0;
+    }
+  }
+  return -1;
 }
 
 // int main(int argc, char** argv) {
