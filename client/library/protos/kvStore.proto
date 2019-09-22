@@ -1,0 +1,31 @@
+syntax = "proto3";
+option java_package = "com.grpc.sample";
+
+service kvStore {
+    rpc get(GetRequest) returns(GetResponse);
+    rpc put(PutRequest) returns(PutResponse);
+}
+
+message GetRequest {
+    string requestKey  = 1;
+    string requestValue = 2;
+}
+
+message GetResponse {
+    string responseKey = 1;
+    string responseValue = 2;
+    int32 status = 3;
+}
+
+message PutRequest {
+    string requestKey  = 1;
+    string requestNewValue = 2;
+    string requestOldValue = 3;
+}
+
+message PutResponse {
+    string responseKey = 1;
+    string responseNewValue = 2;
+    string responseOldValue = 3;
+    int32 status = 4;
+}
