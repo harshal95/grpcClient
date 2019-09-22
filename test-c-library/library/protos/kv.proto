@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+option java_package = "com.grpc.protocol";
+
+service kv {
+    rpc get(GetRequest) returns(GetResponse);
+}
+
+message GetRequest {
+    string Key = 1 ;
+}
+
+message GetResponse {
+    string Value = 1;
+    int32 ResponseCode = 2;
+}
+

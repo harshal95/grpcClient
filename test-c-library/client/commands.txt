@@ -1,0 +1,4 @@
+g++ -L../Library/ -Wall -o Client Client.c -lsam
+
+DYLD_LIBRARY_PATH=$(pwd)/../Library ./Client
+
