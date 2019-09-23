@@ -159,6 +159,20 @@ int kv739_init(char** server_list) {
   return -1;
 }
 
+int kv739_shutdown(void) {
+  KVStoreClient** connection_list = KVStoreClient::Instance(NULL);
+  for(int i = 0; i < sizeof(connection_list)/sizeof(connection_list[0]); i++) {
+    if(connection_list[i] != NULL) {
+       free(connection_list[i]);
+       connection_list[i] = NULL;
+    }
+  }
+  free(connection_list);
+  connection_list = NULL;
+  return 0;
+}
+
+
 // int main(int argc, char** argv) {
 //   // Instantiate the client. It requires a channel, out of which the actual RPCs
 //   // are created. This channel models a connection to an endpoint (in this case,
