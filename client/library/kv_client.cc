@@ -53,6 +53,7 @@ class KVStoreClient {
     put_request.set_requestkey(key);
     put_request.set_requestnewvalue(value);
     put_request.set_requestoldvalue(oldvalue);
+    put_request.set_updatenode(-1);
 
     PutResponse put_response;
 

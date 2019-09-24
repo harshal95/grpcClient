@@ -18,9 +18,11 @@ message GetResponse {
 }
 
 message PutRequest {
-    string requestKey  = 1;
+    string requestKey = 1;
     string requestNewValue = 2;
     string requestOldValue = 3;
+    int32 updateNode = 4;
+    int64 updateNodeTimestamp = 5;
 }
 
 message PutResponse {
@@ -28,4 +30,26 @@ message PutResponse {
     string responseNewValue = 2;
     string responseOldValue = 3;
     int32 status = 4;
+}
+
+message PushMessageRequest {
+    string pushKey = 1;
+    string pushValue = 2;
+    int64 pushTimestamp = 3;
+    int32 updateNode = 4;
+    int64 updateNodeTimestamp = 5;
+}
+
+message PushMessageResponse {
+    string pushResponseKey = 1;
+    string pushResponseValue = 2;
+    int64 pushResponseTimestamp = 3;
+}
+
+message UpdateNodePushMessage {
+    int32 newUpdateNode = 1;
+    int64 newUpdateNodeTimestamp = 2;
+}
+
+message UpdateNodeResponse {
 }
