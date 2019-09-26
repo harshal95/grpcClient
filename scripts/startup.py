@@ -10,7 +10,7 @@ def buildArgs(n, rank, u, port):
 if __name__ == "__main__":
     mvn_build_list = ["mvn", "-f", "pom.xml", "clean", "install", "-U"]
     mvn_install_list = ["mvn", "exec:java"]
-    working_dir = "/home/harshal/IdeaProjects/grpcDemo"
+    working_dir = "/Users/sangeethasampathkumar/Desktop/ds_p1/grpcDemo"
     subprocess.check_call(mvn_build_list, cwd = working_dir)
 #    subprocess.check_call(mvn_install_list, cwd = working_dir)
     

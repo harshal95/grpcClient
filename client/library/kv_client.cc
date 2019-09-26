@@ -14,7 +14,6 @@
 using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
-
 class KVStoreClient {
  public:
 
@@ -80,9 +79,12 @@ class KVStoreClient {
 static KVStoreClient** Instance(char** server_list) {
   if(server_list == NULL)
     return client_instance;
-  int n = sizeof(server_list)/sizeof(server_list[0]);
+  int n=3;
+  // int n = sizeof(server_list)/sizeof(server_list[0]);
+  std::cout<<"n : "<<n<<std::endl;
   client_instance = (KVStoreClient**)malloc(n * sizeof(KVStoreClient*));
-  for(int i = 0; i < sizeof(server_list)/sizeof(server_list[0]); i++) {
+  // for(int i = 0; i < sizeof(server_list)/sizeof(server_list[0]); i++) {
+  for(int i = 0; i < n; i++) {
     //client_instance[i] = (KVStoreClient* )malloc(sizeof(KVStoreClient));
     client_instance[i] = new KVStoreClient(grpc::CreateChannel(server_list[i], grpc::InsecureChannelCredentials()));
   }
@@ -109,7 +111,8 @@ int kv739_get(char* key, char* value) {
   //KVStoreClient kVStoreClient(grpc::CreateChannel("localhost:9090", grpc::InsecureChannelCredentials()));
   KVStoreClient** connection_list = KVStoreClient::Instance(NULL);
   KVStoreClient* connect_obj = NULL;
-  for(int i = 0; i < sizeof(connection_list)/sizeof(connection_list[0]); i++) {
+  // for(int i = 0; i < sizeof(connection_list)/sizeof(connection_list[0]); i++) {
+  for(int i = 0; i < 3; i++) {
     if(connect_obj == NULL) {
       connect_obj = connection_list[i];
     }
@@ -117,7 +120,7 @@ int kv739_get(char* key, char* value) {
   if(connect_obj == NULL) {
     return -1;
   }
-
+  connect_obj = connection_list[2];
   int response_code = connect_obj -> get(key_string, value_string);
   //int response_code = kVStoreClient.get(key_string, value_string);
   std::cout << "Response code from Get for key: " << response_code << std::endl;
@@ -133,12 +136,17 @@ int kv739_put(char* key, char* value, char* old_value) {
 
   KVStoreClient** connection_list = KVStoreClient::Instance(NULL);
   KVStoreClient* connect_obj = NULL;
-  for(int i = 0; i < sizeof(connection_list)/sizeof(connection_list[0]); i++) {
+
+  //TODO: Pick random server
+  // connect_obj = connection_list[2];
+  std::cout<<"connection list size: "<< sizeof(connection_list)<<std::endl;
+  for(int i = 0; i < 3; i++) {
     if(connect_obj == NULL) {
+      std::cout<< "individual connect obj!! " <<std::endl;
       connect_obj = connection_list[i];
     }
   }
-  
+  connect_obj = connection_list[2];
   if(connect_obj == NULL) {
     return -1;
   }
@@ -152,7 +160,7 @@ int kv739_put(char* key, char* value, char* old_value) {
 
 int kv739_init(char** server_list) {
   KVStoreClient** connection_list = KVStoreClient::Instance(server_list);
-  for(int i = 0; i < sizeof(server_list)/sizeof(server_list[0]); i++) {
+  for(int i = 0; i < 3; i++) {
     if(connection_list[i] != NULL) {
       return 0;
     }
@@ -162,7 +170,7 @@ int kv739_init(char** server_list) {
 
 int kv739_shutdown(void) {
   KVStoreClient** connection_list = KVStoreClient::Instance(NULL);
-  for(int i = 0; i < sizeof(connection_list)/sizeof(connection_list[0]); i++) {
+  for(int i = 0; i < 3; i++) {
     if(connection_list[i] != NULL) {
        free(connection_list[i]);
        connection_list[i] = NULL;
