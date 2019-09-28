@@ -1,0 +1,3 @@
+init,localhost:9090,localhost:9091
+get,nike,shoe
+put,reebok,shoe
