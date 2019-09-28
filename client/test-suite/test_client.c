@@ -33,14 +33,17 @@ int main() {
 	char newkey[100] = "Viking";
 	char newvalue[100] = "Banian";
 	char oldvalue[100];
-	int put_response_code = kv739_put(newkey, newvalue, oldvalue);
-	printf("Response code for put for key: %s in test_suite: %d\n", newkey, put_response_code);
+	// int put_response_code = kv739_put(newkey, newvalue, oldvalue);
+	// printf("Response code for put for key: %s in test_suite: %d\n", newkey, put_response_code);
+
+	// int response_code = kv739_get(newkey, newvalue);
+	// printf("Response code for get for key: %s in test_suite: %d\n", newkey, response_code);
+	
+	int shutdown_response = kv739_shutdown();
+	printf("Shutdown response: %d\n", shutdown_response);
 
 	int response_code = kv739_get(newkey, newvalue);
 	printf("Response code for get for key: %s in test_suite: %d\n", newkey, response_code);
-	
-	// int shutdown_response = kv739_shutdown();
-	// printf("Shutdown response: %d\n", shutdown_response);
 
 	// int reinit_ret_val = kv739_init(server_list);
 	// printf("Reinit return val from server creation: %d\n", reinit_ret_val);

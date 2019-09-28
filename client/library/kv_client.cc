@@ -2,7 +2,10 @@
 #include <memory>
 #include <string>
 #include <cstdlib>
+#include <fstream>
 #include <grpcpp/grpcpp.h>
+#include <exception>
+#include <chrono>
 #ifdef BAZEL_BUILD
 #include "protos/kvStore.grpc.pb.h"
 #else
@@ -14,6 +17,8 @@
 using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
+int n;
+
 class KVStoreClient {
  public:
 
@@ -32,19 +37,26 @@ class KVStoreClient {
     // the server and/or tweak certain RPC behaviors.
     ClientContext context;
 
+    std::chrono::system_clock::time_point deadline = std::chrono::system_clock::now() + 
+    std::chrono::seconds(5);
+    context.set_deadline(deadline);
+
+    bool success = false;
     // The actual RPC.
     Status status = stub_->get(&context, get_request, &get_response);
-    value = get_response.responsevalue();
+    
     // Act upon its status.
-    if (status.ok()) {
+    if(status.ok()) {
       std::cout << "Get response value: " << get_response.responsevalue() << std::endl;
+      value = get_response.responsevalue();
       return get_response.status();
     } else {
       std::cout << status.error_code() << ": " << status.error_message()
                 << std::endl;
-      return -1;
       //return "RPC failed";
     }
+    
+    return -1;
   }
 
   int put(std::string& key, std::string& value, std::string& oldvalue) {
@@ -58,19 +70,25 @@ class KVStoreClient {
 
     ClientContext context;
 
+    std::chrono::system_clock::time_point deadline = std::chrono::system_clock::now() + 
+    std::chrono::seconds(5);
+    context.set_deadline(deadline);
+
+  
     Status status = stub_->put(&context, put_request, &put_response);
-    oldvalue = put_response.responseoldvalue();
-    value = put_response.responsenewvalue();
+    
 
     if(status.ok()) {
       std::cout << "put value : " << put_response.responsenewvalue() << std::endl;
+      oldvalue = put_response.responseoldvalue();
+      value = put_response.responsenewvalue();
       return put_response.status();
     } else {
       std::cout << status.error_code() << ": " << status.error_message()
                   << std::endl;
-      return -1;
-        //return "RPC failed";
     }
+    
+    return -1;
 }
 // static KVStoreClient** CreatedInstance() {
 //   return client_instance;
@@ -79,7 +97,12 @@ class KVStoreClient {
 static KVStoreClient** Instance(char** server_list) {
   if(server_list == NULL)
     return client_instance;
-  int n=3;
+  std::ifstream in("server_instances.txt");
+  std::string str;
+
+  if(std::getline(in, str)) {
+    n = std::stoi(str);
+  }
   // int n = sizeof(server_list)/sizeof(server_list[0]);
   std::cout<<"n : "<<n<<std::endl;
   client_instance = (KVStoreClient**)malloc(n * sizeof(KVStoreClient*));
@@ -105,23 +128,43 @@ static KVStoreClient** Instance(char** server_list) {
 KVStoreClient** KVStoreClient::client_instance = NULL;
 
 int kv739_get(char* key, char* value) {
-
+  std::cout<<"inside get"<<std::endl;
   std::string key_string(key);
   std::string value_string(value);
   //KVStoreClient kVStoreClient(grpc::CreateChannel("localhost:9090", grpc::InsecureChannelCredentials()));
   KVStoreClient** connection_list = KVStoreClient::Instance(NULL);
-  KVStoreClient* connect_obj = NULL;
-  // for(int i = 0; i < sizeof(connection_list)/sizeof(connection_list[0]); i++) {
-  for(int i = 0; i < 3; i++) {
-    if(connect_obj == NULL) {
-      connect_obj = connection_list[i];
+  for(int i = 0; i < n; i++) {
+    if(connection_list[i] == NULL) {
+      std::cout<<"connection shut for " << i << std::endl;
     }
   }
-  if(connect_obj == NULL) {
-    return -1;
+
+ 
+
+  KVStoreClient* connect_obj = NULL;
+  // for(int i = 0; i < sizeof(connection_list)/sizeof(connection_list[0]); i++) {
+  // for(int i = 0; i < n; i++) {
+  //   if(connect_obj == NULL) {
+  //     connect_obj = connection_list[i];
+  //   }
+  // }
+  int i = 0;
+  int response_code = -1;
+  while(i < n && response_code == -1) {
+    connect_obj = connection_list[i];
+    if(connect_obj == NULL) {
+      std::cout<<"inside empty connect : " << i << std::endl;
+      i++;
+      continue;
+    }
+  //connect_obj = connection_list[2];
+
+    response_code = connect_obj -> get(key_string, value_string);
+    i++;
   }
-  connect_obj = connection_list[2];
-  int response_code = connect_obj -> get(key_string, value_string);
+  if(response_code == -1) {
+    return response_code;
+  }
   //int response_code = kVStoreClient.get(key_string, value_string);
   std::cout << "Response code from Get for key: " << response_code << std::endl;
   std::cout << "Printing response from Get for key: " << key_string << " and value: " << value_string << std::endl;
@@ -140,18 +183,30 @@ int kv739_put(char* key, char* value, char* old_value) {
   //TODO: Pick random server
   // connect_obj = connection_list[2];
   std::cout<<"connection list size: "<< sizeof(connection_list)<<std::endl;
-  for(int i = 0; i < 3; i++) {
-    if(connect_obj == NULL) {
-      std::cout<< "individual connect obj!! " <<std::endl;
-      connect_obj = connection_list[i];
-    }
-  }
-  connect_obj = connection_list[2];
-  if(connect_obj == NULL) {
-    return -1;
-  }
+  
 
-  int response_code = connect_obj -> put(key_string, value_string, old_value_string);
+  // for(int i = 0; i < n; i++) {
+  //   if(connect_obj == NULL) {
+  //     connect_obj = connection_list[i];
+  //   }
+  // }
+  //connect_obj = connection_list[2];
+
+  // if(connect_obj == NULL) {
+  //   return -1;
+  // }
+
+  int i = 0;
+  int response_code = -1;
+  while(i < n && response_code == -1) {
+    connect_obj = connection_list[i];
+    if(connect_obj == NULL) {
+      i++;
+      continue;
+    }
+    response_code = connect_obj -> put(key_string, value_string, old_value_string);
+    i++;
+  }
   //int response_code = kVStoreClient.put(key_string, value_string, old_value_string);
   std::cout << "Response code from Put for key: " << response_code << std::endl;
   std::cout << "Printing response from Put for key: " << key_string << " and value: " << value_string << " and old_value: " << old_value_string << std::endl;  
@@ -160,7 +215,7 @@ int kv739_put(char* key, char* value, char* old_value) {
 
 int kv739_init(char** server_list) {
   KVStoreClient** connection_list = KVStoreClient::Instance(server_list);
-  for(int i = 0; i < 3; i++) {
+  for(int i = 0; i < n; i++) {
     if(connection_list[i] != NULL) {
       return 0;
     }
@@ -170,14 +225,22 @@ int kv739_init(char** server_list) {
 
 int kv739_shutdown(void) {
   KVStoreClient** connection_list = KVStoreClient::Instance(NULL);
-  for(int i = 0; i < 3; i++) {
+  for(int i = 0; i < n; i++) {
     if(connection_list[i] != NULL) {
-       free(connection_list[i]);
+       std::cout << "shutting down connection : " << i << std::endl;
+       //free(connection_list[i]);
        connection_list[i] = NULL;
     }
   }
-  free(connection_list);
+  for(int i = 0; i < n; i++) {
+    if(connection_list[i] != NULL) {
+      std::cout << "shutdown failed for : " << i << std::endl;
+    }
+  }
+  //free(connection_list);
+
   connection_list = NULL;
+
   return 0;
 }
 
