@@ -1,0 +1,5 @@
+0
+0,Nike,Shirt
+0,Nike,Shoe,Shirt
+0,Nike,Shoe
+0,Nike,Shirt,Shoe

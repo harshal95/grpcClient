@@ -8,6 +8,9 @@ def buildArgs(n, rank, u, port):
     return res
 
 if __name__ == "__main__":
+    if len(sys.argv) < 4 :
+        print("Invalid Number of Arguments Passed")
+        sys.exit(1)
     mvn_build_list = ["mvn", "-f", "pom.xml", "clean", "install", "-U"]
     mvn_install_list = ["mvn", "exec:java"]
     working_dir = "/Users/sangeethasampathkumar/Desktop/ds_p1/grpcDemo"

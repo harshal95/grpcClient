@@ -1,0 +1,5 @@
+init,9090,10
+get,Nike
+put,Nike,Shoe
+get,Nike
+put,Nike,Shirt

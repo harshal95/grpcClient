@@ -36,9 +36,13 @@ class KVStoreClient {
     // Context for the client. It could be used to convey extra information to
     // the server and/or tweak certain RPC behaviors.
     ClientContext context;
+    unsigned int client_connection_timeout = 100000;
+
 
     std::chrono::system_clock::time_point deadline = std::chrono::system_clock::now() + 
-    std::chrono::seconds(5);
+    std::chrono::milliseconds(client_connection_timeout);
+
+    // context.set_wait_for_ready(true);
     context.set_deadline(deadline);
 
     bool success = false;
@@ -51,7 +55,8 @@ class KVStoreClient {
       value = get_response.responsevalue();
       return get_response.status();
     } else {
-      std::cout << status.error_code() << ": " << status.error_message()
+
+      std::cout << status.error_code() << ": " << status.error_message() << " in get operation"
                 << std::endl;
       //return "RPC failed";
     }
@@ -68,10 +73,13 @@ class KVStoreClient {
 
     PutResponse put_response;
 
+
     ClientContext context;
+    unsigned int client_connection_timeout = 100000;
 
     std::chrono::system_clock::time_point deadline = std::chrono::system_clock::now() + 
-    std::chrono::seconds(5);
+    std::chrono::milliseconds(client_connection_timeout);
+    // context.set_wait_for_ready(true);
     context.set_deadline(deadline);
 
   
@@ -84,7 +92,7 @@ class KVStoreClient {
       value = put_response.responsenewvalue();
       return put_response.status();
     } else {
-      std::cout << status.error_code() << ": " << status.error_message()
+      std::cout << status.error_code() << ": " << status.error_message() <<" in put operation"
                   << std::endl;
     }
     
@@ -148,26 +156,49 @@ int kv739_get(char* key, char* value) {
   //     connect_obj = connection_list[i];
   //   }
   // }
-  int i = 0;
+  int i = rand() % n;
   int response_code = -1;
-  while(i < n && response_code == -1) {
+  int deadcount = 0;
+  int visited[n];
+  for(int i = 0; i < n; i++) {
+    visited[i] = 0;
+  }
+  while(deadcount < n && response_code == -1) {
     connect_obj = connection_list[i];
-    if(connect_obj == NULL) {
+    // if(connect_obj == NULL) {
       std::cout<<"inside empty connect : " << i << std::endl;
-      i++;
-      continue;
-    }
+        
+    
   //connect_obj = connection_list[2];
 
     response_code = connect_obj -> get(key_string, value_string);
-    i++;
+    if(response_code == -1) {
+      if(visited[i] == 0) {
+          visited[i] = 1;
+          deadcount++;
+          if(deadcount == n)
+            break;
+          i = rand() % n;
+          continue;  
+      } else {
+          i = rand() % n;
+          continue;  
+      }
+    } else {
+      strcpy(value, value_string.c_str());
+      std::cout << "Get succeeded at: " << i << std::endl;
+      std::cout << "Response code from Get for key: " << response_code << std::endl;
+      std::cout << "Printing response from Get for key: " << key_string << " and value: " << value_string << std::endl;
+      return response_code;
+    }
   }
+
   if(response_code == -1) {
     return response_code;
   }
   //int response_code = kVStoreClient.get(key_string, value_string);
-  std::cout << "Response code from Get for key: " << response_code << std::endl;
-  std::cout << "Printing response from Get for key: " << key_string << " and value: " << value_string << std::endl;
+
+  
   return response_code;
 }
 
@@ -196,21 +227,63 @@ int kv739_put(char* key, char* value, char* old_value) {
   //   return -1;
   // }
 
-  int i = 0;
+
+
+  int i = rand() % n;
   int response_code = -1;
-  while(i < n && response_code == -1) {
-    connect_obj = connection_list[i];
-    if(connect_obj == NULL) {
-      i++;
-      continue;
-    }
-    response_code = connect_obj -> put(key_string, value_string, old_value_string);
-    i++;
+  int deadcount = 0;
+  int visited[n];
+  for(int i = 0; i < n; i++) {
+    visited[i] = 0;
   }
+  while(deadcount < n && response_code == -1) {
+    connect_obj = connection_list[i];
+    // if(connect_obj == NULL) {        
+    
+  //connect_obj = connection_list[2];
+
+    response_code = connect_obj -> put(key_string, value_string, old_value_string);
+    if(response_code == -1) {
+      if(visited[i] == 0) {
+          visited[i] = 1;
+          deadcount++;
+          if(deadcount == n)
+            break;
+          i = rand() % n;
+          continue;  
+      } else {
+          i = rand() % n;
+          continue;  
+      }
+    } else {
+      strcpy(value, value_string.c_str());
+      strcpy(old_value, old_value_string.c_str());
+      std::cout << "Put succeeded at: " << i << std::endl;
+      std::cout << "Response code from Put for key: " << response_code << std::endl;
+      std::cout << "Printing response from Put for key: " << key_string << " and value: " << value_string << " and old_value: " << old_value_string << std::endl;  
+      return response_code;     
+    }
+  }  
+  return response_code;
+  
+
+
+
+  // int i = 0;
+  // int response_code = -1;
+  // while(i < n && response_code == -1) {
+  //   connect_obj = connection_list[i];
+  //   if(connect_obj == NULL) {
+  //     i++;
+  //     continue;
+  //   }
+  //   response_code = connect_obj -> put(key_string, value_string, old_value_string);
+  //   strcpy(old_value, old_value_string.c_str());
+  //   strcpy(value, value_string.c_str());
+  //   i++;
+  // }
   //int response_code = kVStoreClient.put(key_string, value_string, old_value_string);
-  std::cout << "Response code from Put for key: " << response_code << std::endl;
-  std::cout << "Printing response from Put for key: " << key_string << " and value: " << value_string << " and old_value: " << old_value_string << std::endl;  
-  return response_code; 
+  
 }
 
 int kv739_init(char** server_list) {
