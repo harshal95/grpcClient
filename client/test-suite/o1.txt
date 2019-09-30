@@ -1,5 +1,0 @@
-0
-1,Nike,
-0,reebok,shoe,shoe
-0,reebok,pants,pants
-0,reebok,pants

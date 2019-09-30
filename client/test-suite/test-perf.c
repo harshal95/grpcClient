@@ -72,6 +72,10 @@ int main(int argc, char* argv[])
     ssize_t read;
     double n = 0;
     double overall_latency = 0;
+
+    clock_t t; 
+    t = clock();
+
     while ((read = getline(&line, &len, fp)) != -1) {
         printf("Retrieved line of length %zu:\n", read);
         printf("Line read: %s", line);
@@ -91,8 +95,8 @@ int main(int argc, char* argv[])
             int i;
             if(strcmp(tokens[0], "init") == 0) {
                 printf("Init operation invoked: \n");
-                clock_t t; 
-                t = clock();
+                //clock_t t; 
+                //t = clock(); 
 
                 int base_port = atoi(tokens[1]);
 
@@ -109,22 +113,22 @@ int main(int argc, char* argv[])
                 }
                 int response_code = -1;
                 response_code = kv739_init(server_list);
-                t = clock() - t; 
-                double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds
+                //t = clock() - t; 
+                //double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds 
                 
-                fprintf(ofp, "%d,",response_code);
-                fprintf(ofp, "%f\n",time_taken);
+                fprintf(ofp, "%d",response_code);
+                // fprintf(ofp, "%f\n",time_taken);
                 for (i = 0; *(tokens + i); i++) {
                     free(*(tokens + i));
                 }
                 free(tokens);
-                printf("Init operation took: %f\n", time_taken);
-                overall_latency += time_taken;
+                //printf("Init operation took: %f\n", time_taken);
+                //overall_latency += time_taken;
 
             } else if(strcmp(tokens[0], "get") == 0) {
                 printf("Get operation invoked: \n");
-                clock_t t; 
-                t = clock(); 
+                //clock_t t; 
+                //t = clock(); 
                 char* key = *(tokens + 1);
                 char value[100];
                 value[0] = '\0';
@@ -132,23 +136,23 @@ int main(int argc, char* argv[])
                 int response_code = -1;
                 response_code = kv739_get(key, value);
 
-                t = clock() - t; 
-                double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds 
+                //t = clock() - t; 
+                //double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds 
                 fprintf(ofp, "%d,", response_code);
                 fprintf(ofp, "%s,", key);
-                fprintf(ofp, "%s,", value);
-                fprintf(ofp, "%f\n", time_taken);
+                fprintf(ofp, "%s", value);
+                //fprintf(ofp, "%f\n", time_taken);
 
                 for (i = 0; *(tokens + i); i++) {
                     free(*(tokens + i));
                 }
                 free(tokens);
-                printf("Get operation took: %f\n", time_taken);
-                overall_latency += time_taken;
+                //printf("Get operation took: %f\n", time_taken);
+                //overall_latency += time_taken;
             } else if(strcmp(tokens[0], "put") == 0) {
                 printf("Put operation invoked: \n");
-                clock_t t; 
-                t = clock(); 
+                //clock_t t; 
+                //t = clock(); 
 
                 char* newkey = *(tokens + 1); 
                 char* newvalue = *(tokens + 2);
@@ -156,38 +160,41 @@ int main(int argc, char* argv[])
                 oldvalue[0] = '\0';
                 int response_code = -1;
                 response_code = kv739_put(newkey, newvalue, oldvalue);
-                t = clock() - t; 
-                double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds 
+                //t = clock() - t; 
+                //double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds 
 
                 fprintf(ofp, "%d,", response_code);
                 fprintf(ofp, "%s,", newkey);
                 fprintf(ofp, "%s,", newvalue);
-                fprintf(ofp, "%s,", oldvalue);
-                fprintf(ofp, "%f\n", time_taken);
+                fprintf(ofp, "%s", oldvalue);
+                //fprintf(ofp, "%f\n", time_taken);
 
                 for (i = 0; *(tokens + i); i++) {
                     free(*(tokens + i));
                 }
                 free(tokens);
-                printf("Put operation took: %f\n", time_taken);
-                overall_latency += time_taken;
+                //printf("Put operation took: %f\n", time_taken);
+                //overall_latency += time_taken;
             } else if(strcmp(tokens[0], "shutdown") == 0) {
                 printf("Shutdown operation invoked: \n");
-                clock_t t; 
-                t = clock(); 
+                //clock_t t; 
+                //t = clock(); 
                 int response_code = -1;
                 response_code = kv739_shutdown();
-                t = clock() - t; 
-                double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds 
-                fprintf(ofp, "%d,", response_code);
-                fprintf(ofp, "%f\n", time_taken);
-                printf("Shutdown operation took: %f\n", time_taken);
-                overall_latency += time_taken;
+                //t = clock() - t; 
+                //double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds 
+                fprintf(ofp, "%d", response_code);
+                //fprintf(ofp, "%f\n", time_taken);
+                //printf("Shutdown operation took: %f\n", time_taken);
+                //overall_latency += time_taken;
             }
         }
     }
-    printf("overall_latency: %f\n", overall_latency);
-    printf("throughput: %f\n", n /overall_latency);
+
+    t = clock() - t; 
+    double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds
+    printf("overall_latency: %f\n", time_taken);
+    printf("throughput: %f\n", n /time_taken);
     fclose(fp);
     fclose(ofp);
     //char months[] = "JAN,FEB,MAR,APR,MAY,JUN,JUL,AUG,SEP,OCT,NOV,DEC";
@@ -195,3 +202,4 @@ int main(int argc, char* argv[])
 
     return 0;
 }
+
