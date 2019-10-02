@@ -22,7 +22,7 @@ CXXFLAGS += -std=c++11
 ifeq ($(SYSTEM),Darwin)
 LDFLAGS += -L/usr/local/lib `pkg-config --libs protobuf grpc++ grpc`\
            -lgrpc++_reflection\
-           -ldl
+           -ldl -shared
 else
 LDFLAGS += -L/usr/local/lib `pkg-config --libs protobuf grpc++ grpc`\
            -Wl,--no-as-needed -lgrpc++_reflection -Wl,--as-needed\
@@ -38,7 +38,7 @@ vpath %.proto $(PROTOS_PATH)
 
 all: system-check kv_client
 kv_client : kvStore.pb.o kvStore.grpc.pb.o kv_client.o
-	$(CXX) $^ $(LDFLAGS) -o $@
+	$(CXX) $^ $(LDFLAGS) -o lib739kv.so
 
 .PRECIOUS: %.grpc.pb.cc
 %.grpc.pb.cc: %.proto
@@ -49,7 +49,7 @@ kv_client : kvStore.pb.o kvStore.grpc.pb.o kv_client.o
 	$(PROTOC) -I $(PROTOS_PATH) --cpp_out=. $<
 
 clean:
-	rm -f *.o *.pb.cc *.pb.h kv_client 
+	rm -f *.o *.pb.cc *.pb.h kv_client libkv_client.so 
 
 
 # The following is to test your system and ensure a smoother experience.

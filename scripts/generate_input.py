@@ -32,7 +32,8 @@ if __name__ == "__main__":
 
 
 	value_list = [value.rstrip() for value in value_list_fp.readlines()]
-	ops = ["get", "put"]
+	# ops = ["get", "put"]
+	ops = ["put"]
 
 	print("n is ", n)
 	output_list = []
@@ -54,7 +55,7 @@ if __name__ == "__main__":
 
 		output_list.append(output_str)
 
-	print(output_list)
+	# print(output_list)
 
 	output_file_fp.writelines("%s\n" % operation for operation in output_list)
 	output_file_fp.close()

@@ -1,3 +1,0 @@
-init,9090,10
-get,Nike
-get,reebok
